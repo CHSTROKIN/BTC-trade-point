@@ -1,8 +1,6 @@
 package org.example;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.*;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -17,7 +15,8 @@ public class RawProducer extends Thread{
     private final String endpoint;
     private final String productId;
     private final String tag;
-    private final static String QUEUE_NAME = "CoinBaseQueue";
+    private final static String QUEUE_NAME = NovaConstant.QUEUE_NAME;
+    private static final String EXCHANGE_NAME = NovaConstant.EXCHANGE_NAME;
 
     private final BigAtomicCounter counter;
 
@@ -26,7 +25,12 @@ public class RawProducer extends Thread{
     static {
         factory.setHost("localhost");
         factory.setPort(5672);
-        // Add more configuration as needed
+        // Heartbeat every 30 seconds
+        factory.setRequestedHeartbeat(30);
+        // Enable automatic recovery
+        factory.setAutomaticRecoveryEnabled(true);
+        // Attempt recovery every 10 seconds
+        factory.setNetworkRecoveryInterval(10000);
     }
     public RawProducer(String endpoint, String productId, String tag, BigAtomicCounter counter) {
         this.endpoint = endpoint;
@@ -82,15 +86,23 @@ public class RawProducer extends Thread{
     }
 
     private void publishToConsumers(String data) {
-        // Using Rabbit to produce information
-//        System.out.println("subut info");
         try (Connection connection = createConnection();
-             Channel channel = connection.createChannel()){
-//            System.out.println("connection establish");
-             channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-//             data = data + " with thread:" + Thread.currentThread() + ", in counter" + this.counter.incrementAndGet().toString();
-             System.out.println(data);
-             channel.basicPublish("", QUEUE_NAME, null, data.getBytes(StandardCharsets.UTF_8));
+             Channel channel = connection.createChannel()) {
+
+            // Declare a durable exchange
+            channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT, true);
+
+            // Declare a durable queue
+            channel.queueDeclare(QUEUE_NAME, true, false, false, null);
+
+            // Bind the queue to the exchange
+            channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "");
+
+            AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
+                    .deliveryMode(2) // Make message persistent
+                    .build();
+            channel.basicPublish(EXCHANGE_NAME, "", properties, data.getBytes(StandardCharsets.UTF_8));
+            System.out.println("Produced: " + data);
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();
         }

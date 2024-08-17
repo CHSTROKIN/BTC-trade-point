@@ -3,15 +3,14 @@ package org.example;
 
 
 
-import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.*;
 import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DeliverCallback;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeoutException;
@@ -24,15 +23,19 @@ import java.sql.Statement;
 public class Normalizer extends Thread{
     private final BlockingQueue<String> dataQueue;
     private final String outputFile;
-    private final static String QUEUE_NAME = "CoinBaseQueue";
+    private final static String QUEUE_NAME = NovaConstant.QUEUE_NAME;
     private static final ConnectionFactory factory = new ConnectionFactory();
-    private static final String url = "jdbc:sqlite:DataBase/crypto2.db";
+    private static final String url = NovaConstant.dbUrl;
+    private static final String EXCHANGE_NAME = NovaConstant.EXCHANGE_NAME;
 
     static {
         factory.setHost("localhost");
         factory.setPort(5672);
-        // Add more configuration as needed
+        factory.setRequestedHeartbeat(30);
+        factory.setAutomaticRecoveryEnabled(true);
+        factory.setNetworkRecoveryInterval(10000);
     }
+
 
     public Normalizer(String outputFile) {
         this.dataQueue = new LinkedBlockingQueue<>();
@@ -55,10 +58,10 @@ public class Normalizer extends Thread{
     private void perSistance(String data) {
         String[] result = this.normalizeData(data);
         String productId = result[0];
-        double price = 0.0;
-        double size = 0.0;
-        String time = "";
-        String source = "";
+        double price = Double.valueOf(result[1]);
+        String time = result[2];
+        double size = Double.valueOf(result[3]);
+        String source = result[4];
         String insertSQL = "INSERT INTO crypto(product_id, price, time, size, source) VALUES(?,?,?,?,?);";
         try(java.sql.Connection connection = DriverManager.getConnection(url);
             PreparedStatement statement = connection.prepareStatement(insertSQL)) {
@@ -67,37 +70,55 @@ public class Normalizer extends Thread{
             statement.setDouble(2, price);
             statement.setString(3, time);
             statement.setDouble(4, size);
+            statement.setString(5, source);
             // Execute the insert statement
             int rowsAffected = statement.executeUpdate();
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
     public void receiveFromProducer() {
-//        System.out.println("start to listen");
-        try (Connection connection = createConnection();
+        try (Connection connection = factory.newConnection();
              Channel channel = connection.createChannel()) {
 
-            channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-//            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+            // Declare a durable exchange
+            channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT, true);
+
+            // Declare a durable queue
+            channel.queueDeclare(QUEUE_NAME, true, false, false, null);
+
+            // Bind the queue to the exchange
+            channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "");
+
+            // Set QoS to 1 to ensure sequential processing
+            channel.basicQos(1);
+
+            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-                System.out.println(" [x] Received '" + message + ", start to persistance");
-                this.perSistance(message);
+                try {
+                    System.out.println(" [x] Received '" + message + "', start to persistence");
+                    this.perSistance(message);
+                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                } catch (Exception e) {
+                    System.err.println("Error processing message: " + e.getMessage());
+                    channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, true);
+                }
             };
-            channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> { });
+
+            channel.basicConsume(QUEUE_NAME, false, deliverCallback, consumerTag -> { });
 
             // Keep the consumer running
-            while (true) {
-                Thread.sleep(10);
+            while (!Thread.currentThread().isInterrupted()) {
+                Thread.sleep(1000);
             }
         } catch (IOException | TimeoutException | InterruptedException e) {
             e.printStackTrace();
         }
     }
+
     public void run() {
         receiveFromProducer();
     }
@@ -108,17 +129,16 @@ public class Normalizer extends Thread{
         System.out.println("Data receive is:"+data);
         String[] parts = data.split(": ", 2);
         String[] fields = parts[1].split(",");
-
         // Normalize the data (e.g., convert timestamp, standardize decimal places)
         String normalizedTimestamp = convertTimestamp(fields[0]);
         String normalizedPrice = String.format("%.10f", Double.parseDouble(fields[2]));
         String normalizedSize = String.format("%.10f", Double.parseDouble(fields[3]));
-        String[] result = { parts[0], normalizedTimestamp, fields[1], normalizedPrice, normalizedSize};
         System.out.println("ProductId is " + fields[1]);
         System.out.println("Source is " + parts[0]);
         System.out.println("Time is " + normalizedTimestamp);
         System.out.println("Price is " + normalizedPrice);
         System.out.println("Size is " + normalizedSize);
+        String[] result = { fields[1], normalizedPrice, normalizedTimestamp, normalizedSize, parts[0]};
         return result;
     }
 
