@@ -1,4 +1,4 @@
-package org.example;
+package nova;
 
 
 
@@ -6,25 +6,22 @@ package org.example;
 import com.rabbitmq.client.*;
 import com.rabbitmq.client.Connection;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeoutException;
 
 
 import java.sql.DriverManager;
-import java.sql.Statement;
 
 
-public class Normalizer extends Thread{
+public class Normalizer extends Thread implements Consumer{
     private final static String QUEUE_NAME = NovaConstant.QUEUE_NAME;
     private static final ConnectionFactory factory = new ConnectionFactory();
     private static final String url = NovaConstant.dbUrl;
     private static final String EXCHANGE_NAME = NovaConstant.EXCHANGE_NAME;
+    private final ConcurrentClearingMap<String, String> cache;
 
     static {
         factory.setHost("localhost");
@@ -35,8 +32,8 @@ public class Normalizer extends Thread{
     }
 
 
-    public Normalizer() {
-
+    public Normalizer(ConcurrentClearingMap cache) {
+        this.cache = cache;
     }
 
     private static Connection createConnection() throws IOException, TimeoutException {
@@ -45,14 +42,28 @@ public class Normalizer extends Thread{
     }
 
 
-    private void perSistance(String data) {
+    private void dataPersistance(String data) {
         String[] result = this.normalizeData(data);
         String productId = result[0];
-        double price = Double.valueOf(result[1]);
+        double price = Double.parseDouble(result[1]);
         String time = result[2];
-        double size = Double.valueOf(result[3]);
+        double size = Double.parseDouble(result[3]);
         String source = result[4];
+        String totalStringKey = result[0] + result[1] + result[2] + result[3] + result[4];
+        if (this.cache.contain(totalStringKey)) {
+//            System.out.println("contained in the cache " + totalStringKey);
+            return ;
+        }
+        this.cache.put(totalStringKey, "True");
+//        System.out.println("*************************");
+//        System.out.println("product id is" + productId);
+//        System.out.println("price is" + price);
+//        System.out.println("time is" + time);
+//        System.out.println("size is" + size);
+//        System.out.println("source is" + source);
+//        System.out.println("-------------------------");
         String insertSQL = "INSERT INTO crypto(product_id, price, time, size, source) VALUES(?,?,?,?,?);";
+
         try(java.sql.Connection connection = DriverManager.getConnection(url);
             PreparedStatement statement = connection.prepareStatement(insertSQL)) {
             // Set the values for the placeholders
@@ -90,7 +101,7 @@ public class Normalizer extends Thread{
                 String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
                 try {
                     System.out.println(" [x] Received '" + message + "', start to persistence");
-                    this.perSistance(message);
+                    this.dataPersistance(message);
                     channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
                 } catch (Exception e) {
                     System.err.println("Error processing message: " + e.getMessage());
@@ -102,27 +113,27 @@ public class Normalizer extends Thread{
 
             // Keep the consumer running
             while (!Thread.currentThread().isInterrupted()) {
-                Thread.sleep(1000);
+                Thread.sleep(NovaConstant.CONSUMER_WAIT_TIME);
             }
         } catch (IOException | TimeoutException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
+    @Override
     public void run() {
         receiveFromProducer();
     }
 
     private String[] normalizeData(String data) {
-        // Assuming the data format is: tag: timestamp,product_id,price,size
-        String[] parts = data.split(": ", 2);
-        String[] fields = parts[1].split(",");
-        // Normalize the data (e.g., convert timestamp, standardize decimal places)
-        String normalizedTimestamp = convertTimestamp(fields[0]);
-        String normalizedPrice = String.format("%.10f", Double.parseDouble(fields[2]));
-        String normalizedSize = String.format("%.10f", Double.parseDouble(fields[3]));
-        String[] result = { fields[1], normalizedPrice, normalizedTimestamp, normalizedSize, parts[0]};
-        return result;
+        String[] parts = data.split(",");
+        String source = parts[0].split("@")[1];
+        String time = parts[1];
+        String product_id = parts[2];
+        String price = parts[3];
+        String size = parts[4];
+        System.out.println();
+        return new String[]{product_id, price, time, size, source};
     }
 
     private String convertTimestamp(String isoTimestamp) {
@@ -136,7 +147,8 @@ public class Normalizer extends Thread{
         String tag = "trade@coinbase";
         BigAtomicCounter counter = new BigAtomicCounter();
         System.out.println("begin to run");
-        Thread consumerThread = new Normalizer();
+        ConcurrentClearingMap<String, String> cache = new ConcurrentClearingMap<>();
+        Thread consumerThread = new Normalizer(cache);
         Thread producerThread = new RawProducer(endpoint, productId, tag, counter);
         System.out.println("thread created");
         consumerThread.start();

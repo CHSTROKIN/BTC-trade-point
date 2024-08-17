@@ -1,4 +1,4 @@
-package org.example;
+package nova;
 
 import java.math.BigInteger;
 import java.util.concurrent.atomic.AtomicReference;

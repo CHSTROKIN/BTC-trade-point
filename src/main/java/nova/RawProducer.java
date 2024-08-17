@@ -1,4 +1,4 @@
-package org.example;
+package nova;
 
 import com.rabbitmq.client.*;
 import org.json.JSONObject;
@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeoutException;
 
-public class RawProducer extends Thread{
+public class RawProducer extends Thread implements Producer{
     private final String endpoint;
     private final String productId;
     private final String tag;
@@ -64,7 +64,7 @@ public class RawProducer extends Thread{
         // Keep the connection alive
         while (true) {
             try {
-                Thread.sleep(10);
+                Thread.sleep(NovaConstant.PRODUCER_WAIT_TIME);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 break;
@@ -72,7 +72,7 @@ public class RawProducer extends Thread{
         }
     }
 
-    private void handleMessage(String message) {
+    public void handleMessage(String message) {
         JSONObject json = new JSONObject(message);
         if (json.getString("type").equals("match")) {
             String data = String.format("%s,%s,%s,%s",
@@ -81,11 +81,12 @@ public class RawProducer extends Thread{
                     json.getString("price"),
                     json.getString("size")
             );
-            publishToConsumers(tag + ": " + data);
+            publishToConsumers(tag + "," + data);
         }
     }
 
-    private void publishToConsumers(String data) {
+    @Override
+    public void publishToConsumers(String data) {
         try (Connection connection = createConnection();
              Channel channel = connection.createChannel()) {
 
@@ -101,8 +102,12 @@ public class RawProducer extends Thread{
             AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                     .deliveryMode(2) // Make message persistent
                     .build();
+
+            data = data + "," + this.counter.getAndIncrement().toString();
+
             channel.basicPublish(EXCHANGE_NAME, "", properties, data.getBytes(StandardCharsets.UTF_8));
             System.out.println("Produced: " + data);
+
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();
         }
