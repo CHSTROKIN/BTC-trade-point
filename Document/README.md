@@ -1,26 +1,55 @@
-# Nova prospect project
-## How to use it
-* 1: Install rabbit mq in your device
-  * https://www.rabbitmq.com/docs/install-debian
-* 2: Run rabbit mq 
-  * systemctl start rabbitmq-server
-* 3: Make sure you open port 5672
-* 4: Run the java program
-## What is it
-* It is a **High performanced** and **Recoverable** data fetcher 
-## Core feature:
-* 1: Multithread Raw producer that can monitor multiple product on the market at the same time
-* 2: Multithread Raw producer insert the data cunrrently into sqllite3 achieve peristance data storeage
-* 3: Leverage rabbit mq, making the program strechable and maintainable, it can forms computer groups.
-* 4: Ordered queue in rabbit mq gurantees the squential insertion order
-* 5: Using fixed thread pool to manage the producer thread, and consumer thread
-* 6: Cool GUI interface
-* 7: Recoverable, using rabbitmq to achieve recoverable operation, even rabbit mq is shutdown accidently, it can recover from the previous position
-* 8: Clear and full test case, including correctness test and pressure test
-## External library
-* json library: https://github.com/stleary/JSON-java
-  * lience: MIT
-* Rabbit mq: https://www.rabbitmq.com/client-libraries/java-client
-  * lience: Apache Public Lience 2.0
-* sqllite3: https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
-  * lience: Apache 2.0
+# Nova Prospect Project
+
+## Overview
+Nova Prospect is a high-performance, recoverable data fetcher designed for monitoring multiple products in the market simultaneously.
+
+## Key Features
+1. Multi-threaded raw producer for concurrent market monitoring
+2. Concurrent data insertion into SQLite3 for persistent storage
+3. RabbitMQ integration for scalability and maintainability, supporting computer cluster
+4. Ordered queues in RabbitMQ to guarantee sequential insertion
+5. Fixed thread pool management for producer and consumer threads
+6. User-friendly GUI interface
+7. Fault-tolerant design with RabbitMQ for recovery from unexpected shutdowns
+8. Comprehensive test suite, including correctness and stress tests
+
+## Installation
+
+### Prerequisites
+- RabbitMQ
+- Java Runtime Environment
+
+### Steps
+1. Install RabbitMQ on your device
+  - Follow the [official RabbitMQ installation guide](https://www.rabbitmq.com/docs/install-debian)
+
+2. Start RabbitMQ server
+   ```
+   systemctl start rabbitmq-server
+   ```
+
+3. Ensure port 5672 is open for RabbitMQ communication
+
+4. Run the Java program
+
+## External Libraries
+
+| Library | Source | License |
+|---------|--------|---------|
+| JSON library | [GitHub - JSON-java](https://github.com/stleary/JSON-java) | MIT |
+| RabbitMQ Java Client | [RabbitMQ Client Libraries](https://www.rabbitmq.com/client-libraries/java-client) | Apache License 2.0 |
+| SQLite JDBC | [Maven Repository](https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc) | Apache License 2.0 |
+
+## Architecture
+- Multi-threaded raw data producers
+- RabbitMQ for message queuing and inter-process communication
+- SQLite3 for persistent data storage
+- Fixed thread pool for efficient thread management
+
+## Fault Tolerance
+The system is designed to recover from unexpected shutdowns, resuming operations from the last known state using RabbitMQ's message persistence.
+
+## Testing
+The project includes a comprehensive test suite covering:
+- Correctness tests to ensure accurate functionality
+- Stress tests to verify performance under heavy loads
