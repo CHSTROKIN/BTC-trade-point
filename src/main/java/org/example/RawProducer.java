@@ -40,7 +40,6 @@ public class RawProducer extends Thread{
         return factory.newConnection();
     }
     public void run() {
-//        System.out.println("Begin");
         HttpClient client = HttpClient.newHttpClient();
         WebSocket.Builder wsBuilder = client.newWebSocketBuilder();
         WebSocket webSocket = wsBuilder.buildAsync(URI.create(endpoint), new WebSocket.Listener() {
@@ -84,13 +83,13 @@ public class RawProducer extends Thread{
 
     private void publishToConsumers(String data) {
         // Using Rabbit to produce information
-        System.out.println("subut info");
+//        System.out.println("subut info");
         try (Connection connection = createConnection();
              Channel channel = connection.createChannel()){
-            System.out.println("connection establish");
+//            System.out.println("connection establish");
              channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-             data = data + " with thread:" + Thread.currentThread() + ", in counter" + this.counter.incrementAndGet().toString();
-//             System.out.println(data);
+//             data = data + " with thread:" + Thread.currentThread() + ", in counter" + this.counter.incrementAndGet().toString();
+             System.out.println(data);
              channel.basicPublish("", QUEUE_NAME, null, data.getBytes(StandardCharsets.UTF_8));
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();
@@ -105,12 +104,12 @@ public class RawProducer extends Thread{
 
 //        RawProducer producer = new RawProducer(endpoint, productId, tag);
         Thread thread1 = new RawProducer(endpoint, productId, tag, counter);
-        Thread thread2 = new RawProducer(endpoint, productId, tag, counter);
+//        Thread thread2 = new RawProducer(endpoint, productId, tag, counter);
         thread1.start();
-        thread2.start();
+//        thread2.start();
         try {
             thread1.join();
-            thread2.join();
+//            thread2.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
