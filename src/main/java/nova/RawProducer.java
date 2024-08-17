@@ -102,6 +102,7 @@ public class RawProducer extends Thread implements Producer{
 
             AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                     .deliveryMode(2) // Make message persistent
+                    .headers(Collections.singletonMap("sequence", this.counter.get().longValue()))
                     .build();
 
             data = data + "," + this.counter.getAndIncrement().toString();
