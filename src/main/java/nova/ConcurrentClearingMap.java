@@ -1,9 +1,10 @@
 package nova;
 
+import java.lang.annotation.Inherited;
 import java.util.concurrent.*;
 import java.util.Map;
 
-public class ConcurrentClearingMap<K, V> {
+public class ConcurrentClearingMap<K, V> implements Cache<K,V> {
 
     private final Map<K, V> map = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -12,28 +13,33 @@ public class ConcurrentClearingMap<K, V> {
         // Schedule the map to be cleared every second
         scheduler.scheduleAtFixedRate(this::clear, NovaConstant.CACHE_INITAL_DELAY, NovaConstant.CACHE_CLEAR_TIME_IN_SECOND, TimeUnit.SECONDS);
     }
-
+    @Override
     public V put(K key, V value) {
         return map.put(key, value);
     }
-
+    @Override
     public V get(K key) {
         return map.get(key);
     }
-
+    @Override
     public boolean contain(K key) {
         return map.containsKey(key);
     }
+    @Override
     public void clear() {
         map.clear();
 //        System.out.println("Map cleared at: " + System.currentTimeMillis());
     }
-
+    @Override
+    public int size() {
+        return map.size();
+    }
     public void shutdown() {
         scheduler.shutdown();
     }
 
     public static void main(String[] args) {
+        //Baseline Experiment
         ConcurrentClearingMap<String, Integer> clearingMap = new ConcurrentClearingMap<>();
 
         // Create a thread pool for concurrent access

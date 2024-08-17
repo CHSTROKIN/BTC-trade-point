@@ -21,7 +21,7 @@ public class Normalizer extends Thread implements Consumer{
     private static final ConnectionFactory factory = new ConnectionFactory();
     private static final String url = NovaConstant.dbUrl;
     private static final String EXCHANGE_NAME = NovaConstant.EXCHANGE_NAME;
-    private final ConcurrentClearingMap<String, String> cache;
+    private final Cache<String, String> cache;
 
     static {
         factory.setHost("localhost");
@@ -32,7 +32,7 @@ public class Normalizer extends Thread implements Consumer{
     }
 
 
-    public Normalizer(ConcurrentClearingMap cache) {
+    public Normalizer(Cache cache) {
         this.cache = cache;
     }
 
@@ -41,8 +41,8 @@ public class Normalizer extends Thread implements Consumer{
         return factory.newConnection();
     }
 
-
-    private void dataPersistance(String data) {
+    @Override
+    public void dataPersistance(String data) {
         String[] result = this.normalizeData(data);
         String productId = result[0];
         double price = Double.parseDouble(result[1]);
@@ -79,6 +79,7 @@ public class Normalizer extends Thread implements Consumer{
         }
     }
 
+    @Override
     public void receiveFromProducer() {
         try (Connection connection = factory.newConnection();
              Channel channel = connection.createChannel()) {
@@ -125,7 +126,8 @@ public class Normalizer extends Thread implements Consumer{
         receiveFromProducer();
     }
 
-    private String[] normalizeData(String data) {
+    @Override
+    public String[] normalizeData(String data) {
         String[] parts = data.split(",");
         String source = parts[0].split("@")[1];
         String time = parts[1];

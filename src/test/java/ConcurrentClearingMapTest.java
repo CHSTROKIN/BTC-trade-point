@@ -113,5 +113,8 @@ class ConcurrentClearingMapTest {
 
         System.out.println("Pressure test completed in " + duration + " ms");
         System.out.println("Operations per second: " + (numThreads * operationsPerThread * 1000L / duration));
+        //Pressure test completed in 322 ms
+        //Operations per second: 3105590
+        //LOL
     }
 }
