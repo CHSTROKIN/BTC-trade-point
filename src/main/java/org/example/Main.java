@@ -10,22 +10,24 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Main {
-    private static final int threadNumber = 100;
     public static void main(String[] args) throws Exception {
-        String endpoint = "wss://ws-feed.pro.coinbase.com";
-        String productId = "BTC-USD";
+        String[] endpoint = {"wss://ws-feed.pro.coinbase.com"};
+        String[] productId = {"BTC-USD", "ETH-EUR"};
         String tag = "trade@coinbase";
-        String outputFile = "";
+
         BigAtomicCounter counter = new BigAtomicCounter();
-        ExecutorService executors = Executors.newFixedThreadPool(threadNumber);
-        System.out.println(Math.floorDiv(threadNumber, 2));
-        for(int i = 0; i < Math.floorDiv(threadNumber, 2); i++) {
-            Thread taskProducer = new RawProducer(endpoint, productId, tag, counter);
-            Thread taskConsumer = new Normalizer(outputFile);
+        // The number of the thread should be divisible by 2, since for every producer you should have a consumer
+        ExecutorService executors = Executors.newFixedThreadPool(NovaConstant.THREAD_NUMBER);
+        assert (NovaConstant.THREAD_NUMBER % 2 == 0);
+        for(int i = 0; i < Math.floorDiv(NovaConstant.THREAD_NUMBER, 2); i++) {
+            String threadEndPoint = endpoint[i % endpoint.length];
+            String threadProduct = productId[i % productId.length];
+            Thread taskProducer = new RawProducer(threadEndPoint, threadProduct, tag, counter);
+            Thread taskConsumer = new Normalizer();
             executors.execute(taskProducer);
             executors.execute(taskConsumer);
         }
-//        executors.shutdown();
+        executors.shutdown();
 
     }
 }

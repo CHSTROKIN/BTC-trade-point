@@ -21,8 +21,6 @@ import java.sql.Statement;
 
 
 public class Normalizer extends Thread{
-    private final BlockingQueue<String> dataQueue;
-    private final String outputFile;
     private final static String QUEUE_NAME = NovaConstant.QUEUE_NAME;
     private static final ConnectionFactory factory = new ConnectionFactory();
     private static final String url = NovaConstant.dbUrl;
@@ -37,9 +35,8 @@ public class Normalizer extends Thread{
     }
 
 
-    public Normalizer(String outputFile) {
-        this.dataQueue = new LinkedBlockingQueue<>();
-        this.outputFile = outputFile;
+    public Normalizer() {
+
     }
 
     private static Connection createConnection() throws IOException, TimeoutException {
@@ -47,13 +44,6 @@ public class Normalizer extends Thread{
         return factory.newConnection();
     }
 
-    public void subscribe(String data) {
-        try {
-            dataQueue.put(data);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
 
     private void perSistance(String data) {
         String[] result = this.normalizeData(data);
@@ -125,19 +115,12 @@ public class Normalizer extends Thread{
 
     private String[] normalizeData(String data) {
         // Assuming the data format is: tag: timestamp,product_id,price,size
-        System.out.println("********************************");
-        System.out.println("Data receive is:"+data);
         String[] parts = data.split(": ", 2);
         String[] fields = parts[1].split(",");
         // Normalize the data (e.g., convert timestamp, standardize decimal places)
         String normalizedTimestamp = convertTimestamp(fields[0]);
         String normalizedPrice = String.format("%.10f", Double.parseDouble(fields[2]));
         String normalizedSize = String.format("%.10f", Double.parseDouble(fields[3]));
-        System.out.println("ProductId is " + fields[1]);
-        System.out.println("Source is " + parts[0]);
-        System.out.println("Time is " + normalizedTimestamp);
-        System.out.println("Price is " + normalizedPrice);
-        System.out.println("Size is " + normalizedSize);
         String[] result = { fields[1], normalizedPrice, normalizedTimestamp, normalizedSize, parts[0]};
         return result;
     }
@@ -152,10 +135,8 @@ public class Normalizer extends Thread{
         String productId = "BTC-USD";
         String tag = "trade@coinbase";
         BigAtomicCounter counter = new BigAtomicCounter();
-
-//        RawProducer producer = new RawProducer(endpoint, productId, tag);
         System.out.println("begin to run");
-        Thread consumerThread = new Normalizer("");
+        Thread consumerThread = new Normalizer();
         Thread producerThread = new RawProducer(endpoint, productId, tag, counter);
         System.out.println("thread created");
         consumerThread.start();

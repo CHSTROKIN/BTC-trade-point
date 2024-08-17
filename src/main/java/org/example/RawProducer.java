@@ -109,19 +109,15 @@ public class RawProducer extends Thread{
     }
 
     public static void main(String[] args) {
+        //Testing script for development
         String endpoint = "wss://ws-feed.pro.coinbase.com";
         String productId = "BTC-USD";
         String tag = "trade@coinbase";
         BigAtomicCounter counter = new BigAtomicCounter();
-
-//        RawProducer producer = new RawProducer(endpoint, productId, tag);
         Thread thread1 = new RawProducer(endpoint, productId, tag, counter);
-//        Thread thread2 = new RawProducer(endpoint, productId, tag, counter);
         thread1.start();
-//        thread2.start();
         try {
             thread1.join();
-//            thread2.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
