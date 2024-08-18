@@ -1,5 +1,5 @@
 package nova;
-public interface Producer {
-    public void publishToConsumers(String data);
-}
 
+public interface Producer {
+  public void publishToConsumers(String data);
+}

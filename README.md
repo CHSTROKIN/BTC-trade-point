@@ -18,6 +18,7 @@ Nova Prospect is a high-performance, recoverable data fetcher designed for monit
 ### Prerequisites
 - RabbitMQ
 - Java Runtime Environment
+- Sqlite3 is necessary
 
 ### Steps
 1. Install RabbitMQ on your device
@@ -31,7 +32,11 @@ Nova Prospect is a high-performance, recoverable data fetcher designed for monit
 
 3. Ensure port 5672 is open for RabbitMQ communication
 
-4. Run the Java program
+4. Install sqllite3
+
+5. Run the SqlTableCreate, if the file.db is not under Databse's Folder
+
+7. Run the Java program
 
 ## External Libraries
 
