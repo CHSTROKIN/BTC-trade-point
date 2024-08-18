@@ -55,7 +55,8 @@ RabbitMQ is an open-source message broker software that originally implemented t
 To start using RabbitMQ:
 
 1. Install RabbitMQ server
-2. Run the program using sudo rabbitmq-server
+   2. here: https://www.rabbitmq.com/docs/install-debian
+2. Run the program using `sudo rabbitmq-server`
 # Essential RabbitMQ Commands
 
 ## Server Management

@@ -22,6 +22,7 @@ Nova Prospect is a high-performance, recoverable data fetcher designed for monit
 ### Steps
 1. Install RabbitMQ on your device
   - Follow the [official RabbitMQ installation guide](https://www.rabbitmq.com/docs/install-debian)
+  - Also read the RABBITMQ TUTORIAL under Document folder
 
 2. Start RabbitMQ server
    ```
@@ -34,11 +35,12 @@ Nova Prospect is a high-performance, recoverable data fetcher designed for monit
 
 ## External Libraries
 
-| Library | Source | License |
-|---------|--------|---------|
-| JSON library | [GitHub - JSON-java](https://github.com/stleary/JSON-java) | MIT |
+| Library              | Source                                                                             | License            |
+|----------------------|------------------------------------------------------------------------------------|--------------------|
+| JSON library         | [GitHub - JSON-java](https://github.com/stleary/JSON-java)                         | MIT                |
 | RabbitMQ Java Client | [RabbitMQ Client Libraries](https://www.rabbitmq.com/client-libraries/java-client) | Apache License 2.0 |
-| SQLite JDBC | [Maven Repository](https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc) | Apache License 2.0 |
+| SQLite JDBC          | [Maven Repository](https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc)      | Apache License 2.0 |
+| Jfree  Chart         | [Maven](https://mvnrepository.com/artifact/jfree/jfreechart/1.0.13)                 | LGPL               |
 
 ## Architecture
 - Multi-threaded raw data producers
@@ -53,3 +55,5 @@ The system is designed to recover from unexpected shutdowns, resuming operations
 The project includes a comprehensive test suite covering:
 - Correctness tests to ensure accurate functionality
 - Stress tests to verify performance under heavy loads
+## Code format
+* google java format: https://github.com/google/google-java-format
