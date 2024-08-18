@@ -24,11 +24,11 @@ public class Normalizer extends Thread implements Consumer{
     private final Cache<String, String> cache;
 
     static {
-        factory.setHost("localhost");
-        factory.setPort(5672);
-        factory.setRequestedHeartbeat(30);
+        factory.setHost(NovaConstant.HOST);
+        factory.setPort(NovaConstant.PORT);
+        factory.setRequestedHeartbeat(NovaConstant.HEADER_BEAT);
         factory.setAutomaticRecoveryEnabled(true);
-        factory.setNetworkRecoveryInterval(10000);
+        factory.setNetworkRecoveryInterval(NovaConstant.RECOVER);
     }
 
 

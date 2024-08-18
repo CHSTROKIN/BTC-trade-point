@@ -24,14 +24,11 @@ public class RawProducer extends Thread implements Producer{
     private static final ConnectionFactory factory = new ConnectionFactory();
 
     static {
-        factory.setHost("localhost");
-        factory.setPort(5672);
-        // Heartbeat every 30 seconds
-        factory.setRequestedHeartbeat(30);
-        // Enable automatic recovery
+        factory.setHost(NovaConstant.HOST);
+        factory.setPort(NovaConstant.PORT);
+        factory.setRequestedHeartbeat(NovaConstant.HEADER_BEAT);
         factory.setAutomaticRecoveryEnabled(true);
-        // Attempt recovery every 10 seconds
-        factory.setNetworkRecoveryInterval(10000);
+        factory.setNetworkRecoveryInterval(NovaConstant.RECOVER);
     }
     public RawProducer(String endpoint, String productId, String tag, BigAtomicCounter counter) {
         this.endpoint = endpoint;

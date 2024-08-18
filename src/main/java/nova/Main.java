@@ -13,7 +13,7 @@ public class Main {
 
         BigAtomicCounter counter = new BigAtomicCounter();
         // The number of the thread should be divisible by 2, since for every producer you should have a consumer
-        ExecutorService executors = Executors.newFixedThreadPool(NovaConstant.NUMBER_OF_PRODUCER);
+        ExecutorService executors = Executors.newFixedThreadPool(NovaConstant.NUMBER_OF_PRODUCER + NovaConstant.NUMBER_OF_CONSUMER);
         ConcurrentClearingMap<String, String> cache = new ConcurrentClearingMap<>();
         for(int i = 0; i < NovaConstant.NUMBER_OF_PRODUCER; i++) {
             String threadEndPoint = endpoint[i % endpoint.length];

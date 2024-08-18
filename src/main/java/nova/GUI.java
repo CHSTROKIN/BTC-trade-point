@@ -16,7 +16,7 @@ import org.jfree.data.time.TimeSeriesCollection;
 
 public class GUI extends JFrame {
     private final ScheduledExecutorService guiUpdater = Executors.newSingleThreadScheduledExecutor();
-    private ExecutorService executors = Executors.newFixedThreadPool(NovaConstant.NUMBER_OF_PRODUCER);
+    private ExecutorService executors = Executors.newFixedThreadPool(NovaConstant.NUMBER_OF_PRODUCER + NovaConstant.NUMBER_OF_CONSUMER);
     private BigAtomicCounter counter;
     private ConcurrentClearingMap<String, String> cache;
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
