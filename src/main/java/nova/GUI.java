@@ -106,13 +106,6 @@ public class GUI extends JFrame {
             executors.shutdownNow();
             executors = Executors.newFixedThreadPool(NovaConstant.NUMBER_OF_PRODUCER);
         }
-        while (executors.isTerminated()){
-            try {
-                Thread.sleep(100);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     private void updateGUI() {

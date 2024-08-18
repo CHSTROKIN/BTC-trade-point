@@ -13,4 +13,5 @@ public class NovaConstant {
     public static final int GUI_HEIGHT = 600;
     public static final int GUI_WIDTH = 600;
     public static final int NUMBER_OF_CONSUMER = 1;
+    public static final int SHUTDOWN_SECOND = 60;
 }

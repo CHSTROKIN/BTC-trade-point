@@ -3,6 +3,7 @@ package nova;// Press Shift twice to open the Search Everywhere dialog and type 
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -25,6 +26,14 @@ public class Main {
             executors.execute(taskConsumer);
         }
         executors.shutdown();
-
+        try {
+            // Wait for tasks to complete, with a timeout
+            if (!executors.awaitTermination(NovaConstant.SHUTDOWN_SECOND, TimeUnit.SECONDS)) {
+                // Force shutdown if timeout occurs
+                executors.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executors.shutdownNow();
+        }
     }
 }
