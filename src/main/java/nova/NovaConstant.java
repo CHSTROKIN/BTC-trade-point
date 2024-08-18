@@ -9,4 +9,5 @@ public class NovaConstant {
     public static final int CONSUMER_WAIT_TIME = 10;
     public static final int CACHE_CLEAR_TIME_IN_SECOND = 10;
     public static final int CACHE_INITAL_DELAY = CACHE_CLEAR_TIME_IN_SECOND;
+    public static final int UPDATE_GUI_TIME_IN_SECOND = 1;
 }

@@ -13,16 +13,15 @@ public class Main {
         BigAtomicCounter counter = new BigAtomicCounter();
         // The number of the thread should be divisible by 2, since for every producer you should have a consumer
         ExecutorService executors = Executors.newFixedThreadPool(NovaConstant.THREAD_NUMBER);
-        assert (NovaConstant.THREAD_NUMBER % 2 == 0);
         ConcurrentClearingMap<String, String> cache = new ConcurrentClearingMap<>();
-        for(int i = 0; i < Math.floorDiv(NovaConstant.THREAD_NUMBER, 2); i++) {
+        for(int i = 0; i < NovaConstant.THREAD_NUMBER; i++) {
             String threadEndPoint = endpoint[i % endpoint.length];
             String threadProduct = productId[i % productId.length];
             Thread taskProducer = new RawProducer(threadEndPoint, threadProduct, tag, counter);
-            Thread taskConsumer = new Normalizer(cache);
             executors.execute(taskProducer);
-            executors.execute(taskConsumer);
         }
+        Thread taskConsumer = new Normalizer(cache);
+        executors.execute(taskConsumer);
         executors.shutdown();
 
     }
