@@ -1,4 +1,4 @@
-# Nova Prospect Project
+# Trade point getter from coinbase
 
 ## Overview
 Nova Prospect is a high-performance, recoverable data fetcher designed for monitoring multiple products in the market simultaneously.
