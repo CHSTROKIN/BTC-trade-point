@@ -1,7 +1,7 @@
 # Trade point getter from coinbase
 
 ## Overview
-Nova Prospect is a high-performance, recoverable data fetcher designed for monitoring multiple products in the market simultaneously.
+This is a high-performance, recoverable data fetcher designed for monitoring multiple products in the market simultaneously.
 
 ## Key Features
 1. Multi-threaded raw producer for concurrent market monitoring
