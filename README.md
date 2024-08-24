@@ -5,7 +5,7 @@ This is a high-performance, recoverable data fetcher designed for monitoring mul
 
 ## Key Features
 1. Multi-threaded raw producer for concurrent market monitoring
-2. Concurrent data insertion into SQLite3 for persistent storage
+2. Data insertion into SQLite3 for persistent storage
 3. RabbitMQ integration for scalability and maintainability, supporting computer cluster
 4. Ordered queues in RabbitMQ to guarantee sequential insertion
 5. Fixed thread pool management for producer and consumer threads
